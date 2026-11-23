@@ -26,6 +26,9 @@ export function commandWords(input: string): string[] {
   return words;
 }
 
+/** Sync modes accepted by the runtime's XGameSave provider. */
+export const saveSyncModes = ['auto', 'download', 'upload', 'none'];
+
 export function parseLaunchOptions(input: string): { environment: Record<string, string>; prefix: string[]; gameArgs: string[] } {
   const words = commandWords(input);
   const marker = words.indexOf('%command%');
@@ -35,6 +38,16 @@ export function parseLaunchOptions(input: string): { environment: Record<string,
   while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(prefix[0] ?? '')) {
     const assignment = prefix.shift()!, equals = assignment.indexOf('=');
     const name = assignment.slice(0, equals);
+    // The save provider reads its sync mode from this variable. A game may pick
+    // one of the modes the runtime understands. Note that the current runtime
+    // only honours "none" for XGameSaveFiles; XGameSave blob containers still
+    // sync.
+    if (name === 'XODUS_SAVE_SYNC') {
+      const mode = assignment.slice(equals + 1);
+      if (!saveSyncModes.includes(mode.toLowerCase())) throw Error(`XODUS_SAVE_SYNC must be one of: ${saveSyncModes.join(', ')}.`);
+      environment[name] = mode.toLowerCase();
+      continue;
+    }
     // Proton reads its documented compat-config channel from the launch
     // environment. The value only adds compat option names and appends argv
     // data inside the Proton script, so a game may set it. Every other

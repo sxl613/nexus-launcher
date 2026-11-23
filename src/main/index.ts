@@ -1551,7 +1551,9 @@ async function prepareGameLaunch(id: string, steam?: SteamGameContext): Promise<
       environment.XODUS_BRIDGE_PORT = String(serviceSession.bridgePort);
       environment.XODUS_BRIDGE_KEY = serviceSession.bridgeKey;
       environment.XODUS_SAVE_SYNC = 'auto';
-      addGameLog('Xbox cloud save preview is enabled. Saves may download from and upload to the account cloud.');
+      const saveSyncOverride = parseLaunchOptions(game.launchTools?.launchOptions ?? '').environment.XODUS_SAVE_SYNC;
+      if (saveSyncOverride && saveSyncOverride !== 'auto') addGameLog(`Xbox cloud save preview is enabled; launch options set XODUS_SAVE_SYNC=${saveSyncOverride}.`);
+      else addGameLog('Xbox cloud save preview is enabled. Saves may download from and upload to the account cloud.');
     }
     const inviteRuntime=await gameInviteRuntime(wine);
     gameInviteUnavailableReason=!inviteRuntime?'The selected runtime does not support game invitations. Update the runtime and restart the game.':!titleId?'The game has no Xbox title information for invitations.':undefined;

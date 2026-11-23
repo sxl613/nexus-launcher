@@ -20,6 +20,18 @@ it.each(['WINEPREFIX=/other', 'XODUS_SOCKET=/other', 'WINE_DLL_FILE_MAP=bad', 'S
   expect(() => parseLaunchOptions(value)).toThrow('managed by Nexus');
 });
 
+it.each(['auto', 'download', 'upload', 'none', 'NONE'])('lets a game choose the save sync mode: %s', mode => {
+  expect(parseLaunchOptions(`XODUS_SAVE_SYNC=${mode} %command%`).environment).toEqual({ XODUS_SAVE_SYNC: mode.toLowerCase() });
+});
+
+it.each(['', 'off', 'disabled', 'none2'])('rejects unknown save sync modes: "%s"', mode => {
+  expect(() => parseLaunchOptions(`XODUS_SAVE_SYNC=${mode} %command%`)).toThrow('XODUS_SAVE_SYNC must be one of');
+});
+
+it('keeps every other XODUS_ variable managed', () => {
+  expect(() => parseLaunchOptions('XODUS_SAVE_SYNC=none XODUS_SOCKET=/tmp/x %command%')).toThrow('XODUS_SOCKET is managed by Nexus');
+});
+
 it('keeps case variants as inert data because the managed names are exact', () => {
   // Linux environment names are case sensitive: Wine and Proton read the exact
   // upper-case names, so a different spelling cannot shadow them.
